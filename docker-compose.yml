@@ -1,0 +1,38 @@
+services:
+  hotel_mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  hotel_backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - hotel_mongo
+
+  hotel_frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - hotel_backend
+
+  admin_backend:
+    build: ./admin_backend
+    ports:
+      - "8000:6000"
+    depends_on:
+      - hotel_mongo
+
+  admin_frontend:
+    build: ./admin_frontend
+    ports:
+    - "7000:80"
+    depends_on:
+    - admin_backend
+
+volumes:
+  mongo_data:
