@@ -128,12 +128,14 @@ def delete_booking(booking_id):
 @app.route('/api/admin/rooms/<room_id>', methods=['DELETE'])
 def delete_room(room_id):
     try:
-        bookings_collection.delete_many({"room": ObjectId(room_id)})
-        result = rooms_collection.delete_one({"_id": ObjectId(room_id)})
-        if result.deleted_count == 0:
-            return jsonify({"error": "Room not found"}), 404
-        socketio.emit('roomDeleted', {"roomId": str(room_id)})
-        return jsonify({"message": "Room deleted"}), 200
+        # delete to the hotel backend dont need to call the database directly
+        try:
+            resp = requests.delete(f'http://hotel_backend:5000/api/rooms/{room_id}', timeout=2)
+            print("Hotel backend delete response:", resp.status_code, resp.text, file=sys.stderr)
+            return (resp.text, resp.status_code, resp.headers.items())
+        except Exception as e:
+            print("Failed to notify hotel backend for delete:", e, file=sys.stderr)
+            return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
