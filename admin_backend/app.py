@@ -220,7 +220,7 @@ def unbook_room(booking_id):
                 {"$set": {"available": True, "bookedBy": None}}
             )
 
-        # Delete the booking (same as delete_booking)
+        # Delete the booking (same as delete_booking logic)
         bookings_collection.delete_one({"_id": ObjectId(booking_id)})
 
         # Notify clients
