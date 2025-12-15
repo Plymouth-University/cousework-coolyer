@@ -101,7 +101,7 @@ const AdminDashboard = () => {
   const refreshData = () => {
     fetchBookings();
     fetchRooms();
-    checkHealth(); // <-- Add this line
+    checkHealth(); 
   };
 
   useEffect(() => {

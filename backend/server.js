@@ -104,7 +104,40 @@ app.post('/api/reset', async (req, res) => {
     io.emit('resetRooms');
     res.json({ message: 'All rooms reset' });
 });
+// Add a new room
+app.post('/api/rooms', async (req, res) => {
+    const { number, type, price, available, bookedBy, maintenance } = req.body;
+    try {
+        const room = await Room.create({
+            number,
+            type,
+            price,
+            available: available !== undefined ? available : true,
+            bookedBy: bookedBy || null,
+            maintenance: maintenance || false
+        });
 
+        console.log('Room added:', room); 
+
+        // Emit to all clients that a new room was added
+        io.emit('newRoom', {
+            _id: room._id,
+            number: room.number,
+            type: room.type,
+            price: room.price,
+            available: room.available,
+            bookedBy: room.bookedBy,
+            maintenance: room.maintenance
+        });
+
+        //console.log('Emitted newRoom event for:', room._id); 
+
+        res.status(201).json({ message: 'Room added', room });
+    } catch (err) {
+        //console.error('Error adding room:', err); 
+        res.status(500).json({ error: err.message });
+    }
+});
 // Set room maintenance status
 app.patch('/api/rooms/:roomId/maintenance', async (req, res) => {
   const { maintenance } = req.body;
@@ -132,6 +165,15 @@ app.post('/api/rooms/:roomId/unbook', async (req, res) => {
 
     io.emit('roomUnbooked', { roomId: room._id });
     res.json({ message: 'Room unbooked', room });
+});
+app.delete('/api/rooms/:roomId', async (req, res) => {
+    const room = await Room.findByIdAndDelete(req.params.roomId);
+    if (!room) return res.status(404).json({ error: 'Room not found' });
+
+    // Emit to all clients that a room was deleted
+    io.emit('roomDeleted', { roomId: req.params.roomId });
+
+    res.json({ message: 'Room deleted', roomId: req.params.roomId });
 });
 
 // health of the backend

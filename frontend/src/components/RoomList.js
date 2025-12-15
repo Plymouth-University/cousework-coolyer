@@ -29,13 +29,17 @@ function RoomList() {
 
     socket.on('roomMaintenance', () => {
       fetchRooms();
+      console.log('Received roomMaintenance event, fetching rooms');
     });
 
     socket.on('roomDeleted', () => {
       fetchRooms();
     });
 
-    socket.on('newRoom', (room) => setRooms(prev => [...prev, room]));
+    socket.on('newRoom', () => {
+      fetchRooms();
+      console.log('Received newRoom event, fetching rooms');
+    });
     socket.on('resetRooms', () => setRooms(prev => prev.map(r => ({ ...r, available: true }))));
 
     return () => {
