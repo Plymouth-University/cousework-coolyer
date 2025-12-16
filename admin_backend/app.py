@@ -147,7 +147,23 @@ def set_room_maintenance(room_id):
         return (resp.text, resp.status_code, resp.headers.items())
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
+@app.route('/api/admin/rooms/<room_id>', methods=['PATCH'])
+def edit_room(room_id):
+    try:
+        data = request.json
+        print(f"[ADMIN PATCH] Received edit for room {room_id} with data: {data}", file=sys.stderr)
+        # Forward the PATCH to the hotel backend
+        try:
+            resp = requests.patch(f'http://hotel_backend:5000/api/rooms/{room_id}', json=data, timeout=3)
+            print(f"[ADMIN PATCH] Hotel backend response: {resp.status_code} {resp.text}", file=sys.stderr)
+        except Exception as e:
+            print(f"[ADMIN PATCH] Error contacting hotel backend: {e}", file=sys.stderr)
+            return jsonify({"error": f"Hotel backend error: {str(e)}"}), 500
+        return (resp.text, resp.status_code, resp.headers.items())
+    except Exception as e:
+        print(f"[ADMIN PATCH] Exception: {e}", file=sys.stderr)
+        return jsonify({"error": str(e)}), 500
 # Get all rooms
 @app.route('/api/admin/rooms', methods=['GET'])
 def get_rooms():

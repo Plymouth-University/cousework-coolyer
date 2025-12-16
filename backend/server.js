@@ -138,6 +138,28 @@ app.post('/api/rooms', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+app.patch('/api/rooms/:roomId', async (req, res) => {
+    const { number, type, price } = req.body;
+    const room = await Room.findByIdAndUpdate(
+        req.params.roomId,
+        { number, type, price },
+        { new: true }
+    );
+    if (!room) return res.status(404).json({ error: 'Room not found' });
+
+    // Emit a plain object for roomUpdated
+    const updatedRoom = {
+        _id: room._id,
+        number: room.number,
+        type: room.type,
+        price: room.price,
+        available: room.available,
+        bookedBy: room.bookedBy,
+        maintenance: room.maintenance
+    };
+    io.emit('roomUpdated', updatedRoom);
+    res.json(updatedRoom);
+});
 // Set room maintenance status
 app.patch('/api/rooms/:roomId/maintenance', async (req, res) => {
   const { maintenance } = req.body;

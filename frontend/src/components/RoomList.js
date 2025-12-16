@@ -42,6 +42,11 @@ function RoomList() {
     });
     socket.on('resetRooms', () => setRooms(prev => prev.map(r => ({ ...r, available: true }))));
 
+    socket.on('roomUpdated', (updatedRoom) => {
+    setRooms(prev =>
+      prev.map(r => r._id === updatedRoom._id ? updatedRoom : r)
+    );
+  });
     return () => {
       socket.off('roomBooked');
       socket.off('roomUnbooked');
@@ -49,6 +54,7 @@ function RoomList() {
       socket.off('roomDeleted');
       socket.off('newRoom');
       socket.off('resetRooms');
+      socket.off('roomUpdated');
     };
   }, []);
 

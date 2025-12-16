@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import AddRoom from './AddRoom';
+import EditRoom from './EditRoom';
 import BookingsList from './BookingsList';
 import { io } from 'socket.io-client';
 
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
   const [adminHealth, setAdminHealth] = useState('unknown');
   const [dbHealth, setDbHealth] = useState('unknown');
   const [hotelHealth, setHotelHealth] = useState('unknown');
+  const [editingRoom, setEditingRoom] = useState(null);
 
   // Fetch bookings
   const fetchBookings = async () => {
@@ -35,7 +37,7 @@ const AdminDashboard = () => {
       console.error("Failed to unbook:", error);
     }
   };
-
+  
   const handleDeleteBooking = async (bookingId) => {
     try {
       await axios.delete(`${API_URL}/api/admin/bookings/${bookingId}`);
@@ -133,7 +135,11 @@ const AdminDashboard = () => {
       fetchRooms();
       fetchBookings();
     });
-
+    socket.on('roomUpdated', (updatedRoom) => {
+      setRooms(prevRooms =>
+        prevRooms.map(room => room._id === updatedRoom._id ? updatedRoom : room)
+      );
+    });
     return () => {
       clearInterval(interval); // Clear interval on unmount
       socket.off('newRoom');
@@ -142,6 +148,7 @@ const AdminDashboard = () => {
       socket.off('roomMaintenance');
       socket.off('roomUnbooked');
       socket.off('roomDeleted');
+      socket.off('roomUpdated');
     };
   }, []);
 
@@ -175,6 +182,26 @@ const AdminDashboard = () => {
                 ? "Available"
                 : `Booked by ${r.bookedBy || "Unknown"}`}
 
+            {/* Edit button */}
+            <button
+              style={{ marginLeft: "10px" }}
+              onClick={() => setEditingRoom(r)}
+            >
+              Edit
+            </button>
+
+            {/* Show EditRoom form if this room is being edited */}
+            {editingRoom && editingRoom._id === r._id && (
+              <EditRoom
+                room={editingRoom}
+                onSave={() => {
+                  setEditingRoom(null);
+                  fetchRooms();
+                }}
+                onCancel={() => setEditingRoom(null)}
+              />
+            )}
+
             {/* Show Unbook only if booked (not available, not maintenance) */}
             {!r.available && !r.maintenance && (
               <button
@@ -189,7 +216,7 @@ const AdminDashboard = () => {
                     handleDeleteBooking(booking._id);
                   } else {
                     alert("No booking found for this room. Try refreshing.");
-                    fetchBookings(); // Optionally refresh bookings here
+                    fetchBookings();
                   }
                 }}
               >
