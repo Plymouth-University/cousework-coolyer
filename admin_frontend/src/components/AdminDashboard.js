@@ -4,6 +4,7 @@ import AddRoom from './AddRoom';
 import EditRoom from './EditRoom';
 import BookingsList from './BookingsList';
 import { io } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
 
 const API_URL = 'http://localhost:8000'; // For admin API requests
 const SOCKET_URL = 'http://localhost:5000'; // For real-time booking events
@@ -17,6 +18,67 @@ const AdminDashboard = () => {
   const [hotelHealth, setHotelHealth] = useState('unknown');
   const [editingRoom, setEditingRoom] = useState(null);
 
+  const navigate = useNavigate();
+
+  // Debug: log token on mount and after refresh
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+    console.log("Admin token:", token);
+    if (!token) {
+      navigate('/admin/login');
+      return;
+    }
+    // Fetch data only if token exists
+    checkHealth();
+    fetchRooms();
+    fetchBookings();
+    const interval = setInterval(checkHealth, 5000);
+
+    // Real-time updates via Socket.IO
+    socket.on('newRoom', (room) => setRooms(prev => [...prev, room]));
+    socket.on('resetRooms', () => {
+      fetchRooms();
+      fetchBookings();
+    });
+    socket.on('newBooking', () => {
+      fetchBookings();
+      fetchRooms();
+    });
+    socket.on('roomMaintenance', () => {
+      fetchRooms();
+      fetchBookings();
+    });
+    socket.on('roomUnbooked', () => {
+      fetchRooms();
+      fetchBookings();
+    });
+    socket.on('roomDeleted', () => {
+      fetchRooms();
+      fetchBookings();
+    });
+    socket.on('roomUpdated', (updatedRoom) => {
+      setRooms(prevRooms =>
+        prevRooms.map(room => room._id === updatedRoom._id ? updatedRoom : room)
+      );
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.off('newRoom');
+      socket.off('resetRooms');
+      socket.off('newBooking');
+      socket.off('roomMaintenance');
+      socket.off('roomUnbooked');
+      socket.off('roomDeleted');
+      socket.off('roomUpdated');
+    };
+  }, [navigate]);
+
+  // Document title
+  useEffect(() => {
+    document.title = "Admin Frontend";
+  }, []);
+
   // Fetch bookings
   const fetchBookings = async () => {
     try {
@@ -25,26 +87,6 @@ const AdminDashboard = () => {
       console.log("Bookings fetched:", res.data);
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
-    }
-  };
-
-  const handleUnbookRoom = async (bookingId) => {
-    try {
-      await axios.delete(`${API_URL}/api/admin/unbook/${bookingId}`);
-      fetchBookings(); // refresh bookings list
-      fetchRooms();    // refresh rooms list so availability updates
-    } catch (error) {
-      console.error("Failed to unbook:", error);
-    }
-  };
-  
-  const handleDeleteBooking = async (bookingId) => {
-    try {
-      await axios.delete(`${API_URL}/api/admin/bookings/${bookingId}`);
-      fetchBookings();
-      fetchRooms();
-    } catch (err) {
-      console.error("Failed to delete booking:", err);
     }
   };
 
@@ -71,7 +113,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Move checkHealth outside useEffect so it can be used elsewhere
+  // Health check
   const checkHealth = async () => {
     try {
       try {
@@ -103,59 +145,38 @@ const AdminDashboard = () => {
   const refreshData = () => {
     fetchBookings();
     fetchRooms();
-    checkHealth(); 
+    checkHealth();
   };
 
-  useEffect(() => {
-    checkHealth();
-    const interval = setInterval(checkHealth, 5000);
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    sessionStorage.removeItem('adminToken');
+    navigate('/admin/login');
+  };
 
-    // Real-time updates via Socket.IO
-    socket.on('newRoom', (room) => setRooms(prev => [...prev, room]));
-    socket.on('resetRooms', () => {
-      fetchRooms();
+  const handleUnbookRoom = async (bookingId) => {
+    try {
+      await axios.delete(`${API_URL}/api/admin/unbook/${bookingId}`);
       fetchBookings();
-    });
+      fetchRooms();
+    } catch (error) {
+      console.error("Failed to unbook:", error);
+    }
+  };
 
-    socket.on('newBooking', (booking) => {
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      await axios.delete(`${API_URL}/api/admin/bookings/${bookingId}`);
       fetchBookings();
       fetchRooms();
-    });
-
-    // Listen for maintenance, unbook, and delete events
-    socket.on('roomMaintenance', () => {
-      fetchRooms();
-      fetchBookings();
-    });
-    socket.on('roomUnbooked', () => {
-      fetchRooms();
-      fetchBookings();
-    });
-    socket.on('roomDeleted', () => {
-      fetchRooms();
-      fetchBookings();
-    });
-    socket.on('roomUpdated', (updatedRoom) => {
-      setRooms(prevRooms =>
-        prevRooms.map(room => room._id === updatedRoom._id ? updatedRoom : room)
-      );
-    });
-    return () => {
-      clearInterval(interval); // Clear interval on unmount
-      socket.off('newRoom');
-      socket.off('resetRooms');
-      socket.off('newBooking');
-      socket.off('roomMaintenance');
-      socket.off('roomUnbooked');
-      socket.off('roomDeleted');
-      socket.off('roomUpdated');
-    };
-  }, []);
+    } catch (err) {
+      console.error("Failed to delete booking:", err);
+    }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
       <h2>Admin Dashboard</h2>
-      
       <div style={{ marginBottom: '20px' }}>
         <button onClick={resetBookings} style={{ padding: '10px', marginRight: '10px' }}>
           Reset All Bookings
@@ -163,34 +184,32 @@ const AdminDashboard = () => {
         <button onClick={refreshData} style={{ padding: '10px' }}>
           Refresh Data
         </button>
+        <button onClick={handleLogout} style={{ padding: '10px', marginLeft: '10px', backgroundColor: 'red', color: 'white' }}>
+          Logout
+        </button>
       </div>
-
       <AddRoom onRoomAdded={fetchRooms} />
-      <BookingsList 
-        bookings={bookings} 
-        onDeleteBooking={handleDeleteBooking} 
+      <BookingsList
+        bookings={bookings}
+        onDeleteBooking={handleDeleteBooking}
       />
-      {/* Optional: display rooms */}
       <h3>Rooms</h3>
       <ul>
         {rooms.map(r => (
           <li key={r._id}>
-            Room {r.number} - {r.type} - ${r.price} - 
+            Room {r.number} - {r.type} - £{r.price} - 
             {r.maintenance
               ? "Under Maintenance"
               : r.available
                 ? "Available"
                 : `Booked by ${r.bookedBy || "Unknown"}`}
 
-            {/* Edit button */}
             <button
               style={{ marginLeft: "10px" }}
               onClick={() => setEditingRoom(r)}
             >
               Edit
             </button>
-
-            {/* Show EditRoom form if this room is being edited */}
             {editingRoom && editingRoom._id === r._id && (
               <EditRoom
                 room={editingRoom}
@@ -201,8 +220,6 @@ const AdminDashboard = () => {
                 onCancel={() => setEditingRoom(null)}
               />
             )}
-
-            {/* Show Unbook only if booked (not available, not maintenance) */}
             {!r.available && !r.maintenance && (
               <button
                 style={{ marginLeft: "10px" }}
@@ -223,40 +240,54 @@ const AdminDashboard = () => {
                 Unbook
               </button>
             )}
-
-            {/* Maintenance/End Maintenance buttons */}
             {!r.maintenance && (
               <button
                 style={{ marginLeft: "10px", color: "orange" }}
                 onClick={async () => {
+                  // Optimistically update UI: set maintenance to true and available to false
+                  setRooms(prevRooms =>
+                    prevRooms.map(room =>
+                      room._id === r._id
+                        ? { ...room, maintenance: true, available: false }
+                        : room
+                    )
+                  );
                   try {
                     await axios.patch(`${API_URL}/api/admin/rooms/${r._id}/maintenance`, { maintenance: true });
-                    fetchRooms();
+                    fetchRooms(); // Ensure sync with backend
                   } catch (err) {
                     alert("Failed to mark room as under maintenance.");
+                    fetchRooms(); // Revert if error
                   }
                 }}
               >
                 Maintenance
               </button>
             )}
-
             {r.maintenance && (
               <button
                 style={{ marginLeft: "10px", color: "green" }}
                 onClick={async () => {
+                  // Optimistically update UI: set maintenance to false and available to true
+                  setRooms(prevRooms =>
+                    prevRooms.map(room =>
+                      room._id === r._id
+                        ? { ...room, maintenance: false, available: true, bookedBy: null }
+                        : room
+                    )
+                  );
                   try {
                     await axios.patch(`${API_URL}/api/admin/rooms/${r._id}/maintenance`, { maintenance: false });
-                    fetchRooms();
+                    fetchRooms(); // Ensure sync with backend
                   } catch (err) {
                     alert("Failed to remove room from maintenance.");
+                    fetchRooms(); // Revert if error
                   }
                 }}
               >
                 End Maintenance
               </button>
             )}
-
             <button
               style={{ marginLeft: "10px", color: "red" }}
               onClick={async () => {
@@ -276,7 +307,6 @@ const AdminDashboard = () => {
           </li>
         ))}
       </ul>
-
       <div style={{ marginTop: '40px' }}>
         <h3>System Health</h3>
         <p>Admin API Health: <strong>{adminHealth === 'unknown' ? 'Server Down' : adminHealth}</strong></p>
