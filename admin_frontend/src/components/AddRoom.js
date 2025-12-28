@@ -30,13 +30,17 @@ const AddRoom = ({ onRoomAdded }) => {
         onChange={e => setNumber(e.target.value)}
         style={{ marginRight: '10px' }}
       />
-      <input
-        type="text"
-        placeholder="Type"
+      
+      <select
         value={type}
         onChange={e => setType(e.target.value)}
         style={{ marginRight: '10px' }}
-      />
+      >
+        <option value="">Select Type</option>
+        <option value="Single">Single</option>
+        <option value="Double">Double</option>
+        <option value="Twin">Twin</option>
+      </select>
       <input
         type="number"
         placeholder="Price"
