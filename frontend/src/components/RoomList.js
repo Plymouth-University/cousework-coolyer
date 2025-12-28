@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
+import '../App.css';
 
 const socket = io('http://localhost:5000');
 
@@ -9,17 +10,34 @@ function RoomList() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
+  // Map room types to image URLs
+  const imageMap = {
+    'Single': '/single.jpg',
+    'Double': '/double.jpg',
+    'Twin': '/twins.jpg',
+  };
+
   const fetchRooms = async () => {
     const res = await axios.get('http://localhost:5000/api/rooms');
-    setRooms(res.data);
+    const roomsWithImages = res.data.map(room => ({
+      ...room,
+      imageUrl: imageMap[room.type] || '/single.jpg'
+    }));
+    setRooms(roomsWithImages);
   };
+
+  useEffect(() => {
+    document.title = "Hotel Frontend";
+  }, []);
 
   useEffect(() => {
     fetchRooms();
 
     socket.on('roomBooked', ({ roomId }) => {
       setRooms(prev => prev.map(r =>
-        r._id === roomId ? { ...r, available: false } : r
+        r._id === roomId
+          ? { ...r, available: false, imageUrl: imageMap[r.type] || '/single.jpg' }
+          : r
       ));
     });
 
@@ -29,7 +47,6 @@ function RoomList() {
 
     socket.on('roomMaintenance', () => {
       fetchRooms();
-      console.log('Received roomMaintenance event, fetching rooms');
     });
 
     socket.on('roomDeleted', () => {
@@ -38,15 +55,26 @@ function RoomList() {
 
     socket.on('newRoom', () => {
       fetchRooms();
-      console.log('Received newRoom event, fetching rooms');
     });
-    socket.on('resetRooms', () => setRooms(prev => prev.map(r => ({ ...r, available: true }))));
+
+    socket.on('resetRooms', () => setRooms(prev =>
+      prev.map(r => ({
+        ...r,
+        available: true,
+        imageUrl: imageMap[r.type] || '/single.jpg'
+      }))
+    ));
 
     socket.on('roomUpdated', (updatedRoom) => {
-    setRooms(prev =>
-      prev.map(r => r._id === updatedRoom._id ? updatedRoom : r)
-    );
-  });
+      setRooms(prev =>
+        prev.map(r =>
+          r._id === updatedRoom._id
+            ? { ...updatedRoom, imageUrl: imageMap[updatedRoom.type] || '/single.jpg' }
+            : r
+        )
+      );
+    });
+
     return () => {
       socket.off('roomBooked');
       socket.off('roomUnbooked');
@@ -62,22 +90,36 @@ function RoomList() {
 
   return (
     <div>
-      <h2>Available Rooms</h2>
-      <ul>
+      <h1 style={{ textAlign: 'center', marginTop: '30px', marginBottom: '10px', fontSize: '2.5rem', letterSpacing: '2px' }}>
+        COMP3016 Hotel Management
+      </h1>
+      <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#555' }}>
+        Available Rooms
+      </h2>
+      <div className="room-list">
         {rooms.map(r => (
-          <li key={r._id}>
-            Room {r.number} - {r.type} - ${r.price} -{" "}
-            {r.maintenance
-              ? "Under Maintenance"
-              : r.available
-                ? "Available"
-                : `Booked by ${r.bookedBy || "Unknown"}`}
-            {r.available && !r.maintenance && (
-              <button onClick={() => startBooking(r)}>Book</button>
+          <div className="room-card" key={r._id}>
+            <img
+              src={r.imageUrl}
+              alt={r.type}
+              className="room-image"
+            />
+            <div className="room-type">{r.type}</div>
+            <div className="room-price">£{r.price}</div>
+            {r.maintenance ? (
+              <div className="room-status">Under Maintenance</div>
+            ) : r.available ? (
+              <button className="book-now-btn" onClick={() => startBooking(r)}>
+                Book Now
+              </button>
+            ) : (
+              <div className="room-status">
+                Booked {r.bookedBy ? `by ${r.bookedBy}` : ''}
+              </div>
             )}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
