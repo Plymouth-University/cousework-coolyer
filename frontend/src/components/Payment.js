@@ -13,12 +13,15 @@ const Payment = ({ onComplete }) => {
   const [cvc, setCvc] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  useEffect(() => {
+  document.title = "Payment Page for Room " + (room ? room.number : "");
+}, []);
   // Redirect back if no room is passed
   useEffect(() => {
     if (!room) navigate('/');
   }, [room, navigate]);
 
-  if (!room) return null; // safeguard
+  if (!room) return null; // safeguard if no room
 
   const handlePayment = async () => {
     if (!name || !cardNumber || !expiry || !cvc) {
@@ -39,7 +42,7 @@ const Payment = ({ onComplete }) => {
 
         onComplete && onComplete(res.data);
 
-        alert(`Successfully booked Room ${res.data.room.number} for $${res.data.room.price}`);
+        alert(`Successfully booked Room ${res.data.room.number} for £${res.data.room.price}`);
         navigate('/');
 
       } catch (err) {
@@ -52,7 +55,7 @@ const Payment = ({ onComplete }) => {
   return (
     <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
       <h2>Payment for Room {room.number}</h2>
-      <p>Price: ${room.price}</p>
+      <p>Price: £{room.price}</p>
 
       <input
         type="text"
