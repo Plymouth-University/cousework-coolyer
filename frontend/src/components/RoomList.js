@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
@@ -10,21 +10,22 @@ function RoomList() {
   const [rooms, setRooms] = useState([]);
   const navigate = useNavigate();
 
-  // Map room types to image URLs
-  const imageMap = {
+  // 1. Memoize imageMap
+  const imageMap = useMemo(() => ({
     'Single': '/single.jpg',
     'Double': '/double.jpg',
     'Twin': '/twins.jpg',
-  };
+  }), []);
 
-  const fetchRooms = async () => {
+  // 2. Memoize fetchRooms
+  const fetchRooms = useCallback(async () => {
     const res = await axios.get('http://localhost:5000/api/rooms');
     const roomsWithImages = res.data.map(room => ({
       ...room,
       imageUrl: imageMap[room.type] || '/single.jpg'
     }));
     setRooms(roomsWithImages);
-  };
+  }, [imageMap]);
 
   useEffect(() => {
     document.title = "Hotel Frontend";
@@ -84,7 +85,7 @@ function RoomList() {
       socket.off('resetRooms');
       socket.off('roomUpdated');
     };
-  }, [fetchRooms, imageMap]); // fetchRooms and imageMap
+  }, [fetchRooms, imageMap]); // Now safe!
 
   const startBooking = (room) => navigate('/payment', { state: { room } });
 
