@@ -84,7 +84,7 @@ function RoomList() {
       socket.off('resetRooms');
       socket.off('roomUpdated');
     };
-  }, []);
+  }, [fetchRooms, imageMap]); // fetchRooms and imageMap
 
   const startBooking = (room) => navigate('/payment', { state: { room } });
 

@@ -15,7 +15,7 @@ const Payment = ({ onComplete }) => {
 
   useEffect(() => {
   document.title = "Payment Page for Room " + (room ? room.number : "");
-}, []);
+  }, [room]);
   // Redirect back if no room is passed
   useEffect(() => {
     if (!room) navigate('/');
