@@ -36,3 +36,107 @@
     transform: rotate(360deg);
   }
 }
+
+.room-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.room-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.room-image {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.room-type {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.room-price {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.book-now-btn {
+  background: #61dafb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.book-now-btn:hover {
+  background: #21a1f3;
+}
+
+.room-status {
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+/* Modern background gradient for the whole app */
+body {
+  background: linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%);
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+/* Main container for centering and spacing */
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 16px 0 16px;
+}
+
+/* Modern title and subtitle */
+.app-title {
+  text-align: center;
+  font-size: 2.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #22223b;
+  margin-top: 32px;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.app-subtitle {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #4a5568;
+  margin-bottom: 32px;
+  font-weight: 400;
+}
+
+/* Optional: subtle footer */
+.footer {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin-top: 48px;
+  padding-bottom: 24px;
+  letter-spacing: 1px;
+}
