@@ -6,7 +6,12 @@ const AdminLogin = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [adminHealth, setAdminHealth] = useState('checking');
+  const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+  document.title = "Admin Login";
+}, []);
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -22,6 +27,15 @@ const AdminLogin = ({ onLoginSuccess }) => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    // Auto-login if token exists
+    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+    if (token) {
+      onLoginSuccess();
+      navigate('/admin/dashboard');
+    }
+  }, [onLoginSuccess, navigate]);
+
   const handleLogin = async () => {
     if (adminHealth !== 'Healthy') {
       alert('Cannot login: Admin backend is down.');
@@ -29,7 +43,12 @@ const AdminLogin = ({ onLoginSuccess }) => {
     }
     try {
       const res = await axios.post('http://localhost:8000/api/admin/login', { username, password });
-      if (res.data.success) {
+      if (res.data.success && res.data.token) {
+        if (stayLoggedIn) {
+          localStorage.setItem('adminToken', res.data.token);
+        } else {
+          sessionStorage.setItem('adminToken', res.data.token);
+        }
         onLoginSuccess();
         navigate('/admin/dashboard');
       } else {
@@ -62,6 +81,14 @@ const AdminLogin = ({ onLoginSuccess }) => {
         style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
         disabled={adminHealth !== 'Healthy'}
       />
+      <div style={{ marginBottom: '10px' }}>
+        <input
+          type="checkbox"
+          checked={stayLoggedIn}
+          onChange={e => setStayLoggedIn(e.target.checked)}
+        />{' '}
+        Stay logged in
+      </div>
       <button
         onClick={handleLogin}
         style={{ width: '100%', padding: '12px', fontSize: '16px' }}
