@@ -88,6 +88,7 @@ function RoomList() {
   }, [fetchRooms, imageMap]); // Now safe!
 
   const startBooking = (room) => navigate('/payment', { state: { room } });
+  const goToRoomDescription = (room) => navigate(`/room/${room._id}`, { state: { room } });
 
   return (
     <div>
@@ -99,7 +100,12 @@ function RoomList() {
       </h2>
       <div className="room-list">
         {rooms.map(r => (
-          <div className="room-card" key={r._id}>
+          <div
+            className="room-card"
+            key={r._id}
+            onClick={() => goToRoomDescription(r)}
+            style={{ cursor: 'pointer' }}
+          >
             <img
               src={r.imageUrl}
               alt={r.type}
@@ -110,12 +116,18 @@ function RoomList() {
             {r.maintenance ? (
               <div className="room-status">Under Maintenance</div>
             ) : r.available ? (
-              <button className="book-now-btn" onClick={() => startBooking(r)}>
+              <button
+                className="book-now-btn"
+                onClick={e => {
+                  e.stopPropagation();
+                  startBooking(r);
+                }}
+              >
                 Book Now
               </button>
             ) : (
               <div className="room-status">
-                Booked {r.bookedBy ? `by ${r.bookedBy}` : ''}
+                Booked
               </div>
             )}
           </div>
