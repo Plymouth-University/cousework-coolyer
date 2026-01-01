@@ -8,7 +8,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* User-facing routes */}
+        {/* User facing end routes */}
         <Route path="/" element={<RoomList />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/room/:id" element={<RoomDescription />} />

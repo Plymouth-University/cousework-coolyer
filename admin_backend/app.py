@@ -29,24 +29,24 @@ bookings_collection = db.bookings
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
 ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH")
 SECRET_KEY = os.environ.get("JWT_SECRET", "password123")
-print("[DEBUG] Loaded SECRET_KEY:", SECRET_KEY, file=sys.stderr)
+# print("Loaded SECRET_KEY:", SECRET_KEY, file=sys.stderr)
 # --- Token Required Decorator ---
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        print("[DEBUG] Authorization header received:", request.headers.get('Authorization'), file=sys.stderr)
+        # print(" Authorization header received:", request.headers.get('Authorization'), file=sys.stderr)
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
                 token = auth_header.split(' ')[1]
         if not token:
-            print("[DEBUG] Token is missing!", file=sys.stderr)
+            #print(" Token is missing!", file=sys.stderr)
             return jsonify({'message': 'Token is missing!'}), 401
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         except Exception as e:
-            print("[DEBUG] Token is invalid! Exception:", e, file=sys.stderr)
+            #print(" Token is invalid! Exception:", e, file=sys.stderr)
             return jsonify({'message': 'Token is invalid!'}), 401
         return f(*args, **kwargs)
     return decorated

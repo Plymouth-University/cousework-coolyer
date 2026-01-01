@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-
+// Payment component to handle room booking payments (fake spinner as well)
 const Payment = ({ onComplete }) => {
   const location = useLocation();
   const navigate = useNavigate();

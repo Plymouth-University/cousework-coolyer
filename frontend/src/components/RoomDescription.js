@@ -31,6 +31,9 @@ function RoomDescription() {
     <div className="room-description" style={{ maxWidth: 500, margin: '40px auto', padding: 24, border: '1px solid #ddd', borderRadius: 8 }}>
       <img src={room.imageUrl} alt={room.type} style={{ width: '100%', borderRadius: 8, marginBottom: 16 }} />
       <h2>{room.type} Room</h2>
+      <p style={{ fontWeight: 500, color: '#1976d2', marginBottom: 8 }}>
+        Room Number: {room.number || room.roomNumber || 'N/A'}
+      </p>
       <p><strong>Price:</strong> £{room.price}</p>
       <p><strong>Status:</strong> {room.maintenance ? 'Under Maintenance' : room.available ? 'Available' : 'Booked'}</p>
       <p><strong>Description:</strong> {description}</p>

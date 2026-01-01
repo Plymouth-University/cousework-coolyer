@@ -112,6 +112,9 @@ function RoomList() {
               className="room-image"
             />
             <div className="room-type">{r.type}</div>
+            <div className="room-number" style={{ fontWeight: 500, color: '#1976d2', marginBottom: 4 }}>
+              Room {r.number || r.roomNumber || 'N/A'}
+            </div>
             <div className="room-price">£{r.price}</div>
             {r.maintenance ? (
               <div className="room-status">Under Maintenance</div>

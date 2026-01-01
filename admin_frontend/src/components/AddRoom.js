@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// Component to handle adding a new room 
 const AddRoom = ({ onRoomAdded }) => {
   const [number, setNumber] = useState('');
   const [type, setType] = useState('');
   const [price, setPrice] = useState('');
-
+//  Handles adding a new room
   const handleAddRoom = async () => {
     if (!number || !type || !price) return alert('Fill all fields');
     try {
@@ -19,7 +20,7 @@ const AddRoom = ({ onRoomAdded }) => {
       alert('Failed to add room: ' + err.message);
     }
   };
-
+// JSX for the AddRoom component
   return (
     <div style={{ marginBottom: '20px' }}>
       <h3>Add Room</h3>
